@@ -1,0 +1,53 @@
+<html>
+<head>
+<script type='text/javascript' src='knockout-2.3.0.js'></script>
+</head>
+<body>
+<h4>People</h4>
+<table>
+    <thead>
+        <tr><th>First name</th><th>Last name</th></tr>
+    </thead>
+    <tbody>
+        <!-- ko foreach: people -->
+        <tr>
+            <td data-bind="text: firstName"></td>
+            <td data-bind="text: lastName"></td>
+        </tr>
+        <!-- /ko -->
+        
+        <tr>
+            <td><input id="firstName" type="text"/></td>
+            <td><input id="lastName" type="text"/></td>
+        </tr>
+    </tbody>
+</table>
+<button data-bind="click: addPerson">Add</button>
+
+<script type='text/javascript'>
+function AppViewModel() {
+    var self = this;
+ 
+    self.people = ko.observableArray([
+        { firstName: 'Bert', lastName: 'Bertington' },
+        { firstName: 'Charles', lastName: 'Charlesforth' },
+        { firstName: 'Denise', lastName: 'Dentiste' }
+    ]);
+ 
+    self.addPerson = function() {
+        firstName = document.getElementById("firstName");
+        lastName = document.getElementById("lastName");
+        self.people.push({ firstName: firstName.value, lastName: lastName.value });
+        firstName.value = ""
+        lastName.value = ""
+    };
+ 
+    self.removePerson = function() {
+        self.people.remove(this);
+    }
+}
+ 
+ko.applyBindings(new AppViewModel());
+</script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<html>
+<head>
+<script type='text/javascript' src='knockout-2.3.0.js'></script>
+</head>
+<body>
+<h4>People</h4>
+<table>
+    <thead>
+        <tr><th>First name</th><th>Last name</th></tr>
+    </thead>
+    <tbody>
+        <!-- ko foreach: people -->
+        <tr>
+            <td data-bind="text: firstName"></td>
+            <td data-bind="text: lastName"></td>
+        </tr>
+        <!-- /ko -->
+        
+        <tr data-bind="with: newPerson">
+            <td><input type="text" data-bind="value: firstName"/></td>
+            <td><input type="text" data-bind="value: lastName"/></td>
+        </tr>
+        
+        <tr>
+            <td><button data-bind="click: addPerson">Add</button></td>
+            <td><button data-bind="click: save">Save</button></td>
+        </tr>
+    </tbody>
+</table>
+
+
+<script type='text/javascript'>
+function AppModel() {
+    var self = this;
+    
+    self.people = [
+        { firstName: 'Bert', lastName: 'Bertington' },
+        { firstName: 'Charles', lastName: 'Charlesforth' },
+        { firstName: 'Denise', lastName: 'Dentiste' }        
+    ];
+}
+
+var appModel = new AppModel();
+
+function AppViewModel() {
+    var self = this;
+ 
+    self.people = ko.observableArray(appModel.people);
+ 
+    self.newPerson = {
+        firstName: ko.observable(""),
+        lastName: ko.observable(""),
+        reset: function() {
+            this.firstName("");
+            this.lastName("");
+        }
+    };
+    
+    self.addPerson = function() {
+        self.people.push({ firstName: self.newPerson.firstName(), lastName: self.newPerson.lastName() });
+        self.newPerson.reset();
+    };
+ 
+    self.removePerson = function() {
+        self.people.remove(this);
+    };
+    
+    self.save = function() {
+        appModel.people = self.people();
+        alert(appModel.people);
+    };
+}
+ 
+ko.applyBindings(new AppViewModel());
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Knockout List Example</title>
+        <script type='text/javascript' src='knockout-2.3.0.js'></script>
+    </head>
+    <body>
+        <script type='text/javascript' src='jquery-1.10.2.min.js'></script>
+
+        <h4>People</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>First name</th>
+                    <th>Last name</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ko foreach: people -->
+                <tr>
+                    <td><input type="text" data-bind="value: firstName"/></td>
+                    <td><input type="text" data-bind="value: lastName"/></td>
+                </tr>
+                <!-- /ko -->
+                
+                <tr data-bind="with: newPerson">
+                    <td><input type="text" data-bind="value: firstName"/></td>
+                    <td><input type="text" data-bind="value: lastName"/></td>
+                </tr>
+                
+                <tr>
+                    <td><button data-bind="click: addPerson">Add</button></td>
+                    <td><button data-bind="click: save">Save</button></td>
+                </tr>
+            </tbody>
+        </table>
+                
+        <script type='text/javascript'>
+            function AppModel() {
+                var self = this;
+                
+                self.people = [
+                    { firstName: 'Bert', lastName: 'Bertington' },
+                    { firstName: 'Charles', lastName: 'Charlesforth' },
+                    { firstName: 'Denise', lastName: 'Dentiste' }        
+                ];
+                
+                self.setPeople = function(people) {
+                    self.people = people;
+            
+                    var str = "[";
+                    people.forEach(function (person) {
+                        str += "{ firstName: " + person.firstName + ", lastName: " + person.lastName + " }, ";
+                    });
+                    if (str.length > 1) {
+                        str = str.substring(0, str.length - 2);
+                    }
+                    str += "]";
+                    alert(str);
+                    
+                    alert(JSON.stringify(people));
+                }
+            }
+            
+            function AppViewModel(appModel) {
+                var self = this;
+            
+                self.appModel = appModel;
+                
+                self.people = ko.observableArray();
+             
+                self.setPeople = function() {
+                    self.appModel.people.forEach(function (person) {
+                        self.people.push({ firstName: ko.observable(person.firstName), lastName: ko.observable(person.lastName) });
+                    });
+                };
+                
+                self.setPeople();
+            
+                self.newPerson = {
+                    firstName: ko.observable(""),
+                    lastName: ko.observable(""),
+                    reset: function() {
+                        this.firstName("");
+                        this.lastName("");
+                    }
+                };
+                
+                self.addPerson = function() {
+                    self.people.push({ firstName: ko.observable(self.newPerson.firstName()), lastName: ko.observable(self.newPerson.lastName()) });
+                    self.newPerson.reset();
+                };
+             
+                self.removePerson = function() {
+                    self.people.remove(this);
+                };
+                
+                self.save = function() {
+                    var people = [];
+                    self.people().forEach(function (person) {
+                        people.push({ firstName: person.firstName() , lastName: person.lastName() });
+                    });
+                    self.appModel.setPeople(people);
+                };
+            }
+             
+            var appModel = new AppModel();
+            var appViewModel = new AppViewModel(appModel);
+            ko.applyBindings(appViewModel);
+        </script>
+    </body>
+</html>
