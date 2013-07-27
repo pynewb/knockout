@@ -21,3 +21,7 @@ sudo brew update
 sudo brew install mongodb
 or
 sudo brew upgrade mongodb
+
+To run, point browser at
+
+    http://localhost:4730/list6.html
