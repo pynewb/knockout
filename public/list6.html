@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Knockout List Example</title>
+        <script type='text/javascript' src='knockout-2.3.0.js'></script>
+    </head>
+    <body>
+        <script type='text/javascript' src='jquery-1.10.2.min.js'></script>
+
+        <h4>People</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>First name</th>
+                    <th>Last name</th>
+                    <th>&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ko foreach: people -->
+                <tr>
+                    <td><input type="text" data-bind="value: firstName"/></td>
+                    <td><input type="text" data-bind="value: lastName"/></td>
+                    <td><button data-bind="click: $parent.removePerson">Delete</button></td>
+                </tr>
+                <!-- /ko -->
+                
+                <tr data-bind="with: newPerson">
+                    <td><input type="text" data-bind="value: firstName"/></td>
+                    <td><input type="text" data-bind="value: lastName"/></td>
+                    <td><button data-bind="click: $parent.addPerson">Add</button></td>
+                </tr>
+                
+                <tr>
+                    <td><button data-bind="click: save">Save</button></td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+            </tbody>
+        </table>
+                
+        <script type='text/javascript'>
+            function AppModel() {
+                var self = this;
+                
+                self.people = [
+                    //{ firstName: 'Bert', lastName: 'Bertington' },
+                    //{ firstName: 'Charles', lastName: 'Charlesforth' },
+                    //{ firstName: 'Denise', lastName: 'Dentiste' }        
+                ];
+                
+                self.getPeople = function (callback) {
+                    $.ajax({ 
+                        type: "GET",
+                        dataType: "json",
+                        timeout: 30000,
+                        url: "http://localhost:4730/people",
+                        error: function (fail) {
+                            alert("Failure getting people: " + fail);
+                            if (callback) {
+                                callback(false);
+                            }
+                        },
+                        success: function (data) {
+                            alert("Got: " + JSON.stringify(data));
+                            self.people = data;
+                            if (callback) {
+                                callback(true);
+                            }
+                        }
+                    });
+                };
+
+                self.deletePerson = function (person, callback) {
+                    $.ajax({ 
+                        type: "DELETE",
+                        dataType: "json",
+                        timeout: 30000,
+                        url: "http://localhost:4730/people/" + person._id,
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            alert("Status " + textStatus + " error " + errorThrown + " failure deleting person: " + JSON.stringify(person));
+                            if (callback) {
+                                callback(false);
+                            }
+                        },
+                        success: function (data, textStatus) {
+                            alert("Status" + textStatus + " deleting " + JSON.stringify(data));
+                            if (callback) {
+                                callback(true);
+                            }
+                        }
+                    });
+                };
+
+                self.setPeople = function(people) {
+                    var inserts = [];
+                    var updates = [];
+                    var deletes = [];
+                    people.forEach(function (person) {
+                        if (person._id == null) {
+                            inserts.push(person);
+                        } else {
+                            var matches = self.people.filter(function (obj) {
+                                return obj._id == person._id;
+                            });
+                            if (matches.length != 1) {
+                                alert('fubar: ' + matches.length + ' match(es) found for ' + JSON.stringify(person));
+                                return;
+                            }
+                            var match = matches[0];
+                            if (match.firstName != person.firstName || match.lastName != person.lastName) {
+                                updates.push(person);
+                            }
+                        }
+                    });
+                    self.people.forEach(function (person) {
+                        var matches = people.filter(function (obj) {
+                            return obj._id == person._id;
+                        });
+                        if (matches.length > 1) {
+                            alert('fubar: ' + matches.length + ' match(es) found for existing ' + JSON.stringify(person));
+                            return;
+                        }
+                        if (matches.length == 0) {
+                            deletes.push(person);
+                        }
+                    });
+                    alert("All> " + JSON.stringify(people) + "\n" + "Inserts> " + JSON.stringify(inserts) + "\n" + "Updates> " + JSON.stringify(updates) + "\n" + "Deletes> " + JSON.stringify(deletes));
+                    
+                    deletes.forEach(function (person) {
+                        self.deletePerson(person, function (success) {
+                            alert("Success " + success + " deleting person " + JSON.stringify(person));
+                        });
+                    });
+                    
+                    self.people = people;
+                }
+            }
+            
+            function AppViewModel(appModel) {
+                var self = this;
+            
+                self.appModel = appModel;
+                
+                self.people = ko.observableArray();
+             
+                self.setPeople = function() {
+                    self.appModel.people.forEach(function (person) {
+                        self.people.push({ _id: person._id, firstName: ko.observable(person.firstName), lastName: ko.observable(person.lastName) });
+                    });
+                };
+                
+                self.setPeople();
+            
+                self.newPerson = {
+                    firstName: ko.observable(""),
+                    lastName: ko.observable(""),
+                    reset: function() {
+                        this.firstName("");
+                        this.lastName("");
+                    }
+                };
+                
+                self.addPerson = function() {
+                    self.people.push({ _id: null, firstName: ko.observable(self.newPerson.firstName()), lastName: ko.observable(self.newPerson.lastName()) });
+                    self.newPerson.reset();
+                };
+             
+                self.removePerson = function() {
+                    self.people.remove(this);
+                };
+                
+                self.save = function() {
+                    var people = [];
+                    self.people().forEach(function (person) {
+                        people.push({ _id: person._id, firstName: person.firstName() , lastName: person.lastName() });
+                    });
+                    self.appModel.setPeople(people);
+                };
+            }
+             
+            var appModel = new AppModel();
+            appModel.getPeople(function (success) {
+                alert("Success " + success + " " + JSON.stringify(appModel.people));
+    
+                var appViewModel = new AppViewModel(appModel);
+                ko.applyBindings(appViewModel);
+            });
+            
+//            setTimeout(function () {
+//                alert(JSON.stringify(appModel.people));
+//            }, 10000);
+            
+        </script>
+    </body>
+</html>

@@ -1,8 +1,9 @@
 {
-  "name": "first-express-app",
-  "description": "a fine piece of express art",
+  "name": "show-rest-api",
+  "description": "a rest api for shows",
   "version": "0.0.1",
   "dependencies": {
-    "express": "3.x"
+    "express": "3.x",
+    "mongodb": "1.x"
   }
 }
