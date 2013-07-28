@@ -10,7 +10,7 @@ Client dependencies:
     list3.html: knockout
     list4.html: knockout
     list5.html: knockout jquery "server code (app.js and dependencies)
-    public/list6.html: knockout jquery "server code (app.js and dependencies)"
+    public/list6.html: knockout jquery twitter-bootstrap "server code (app.js and dependencies)"
 
     anotherlist.html: knockout bootstrap jquery (although the committed code does not actually use jquery)
     anotherlist2.html: knockout bootstrap (this code shows that bootstrap layout is ungood for this view)
