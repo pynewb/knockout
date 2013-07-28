@@ -23,8 +23,10 @@ The server is based on node.js with Express and the MongoDB client
 
 node.js:
     nodejs.org: used v0.10.13
+                note that this version does not support Iterator, generators or array comprehensions
     Mac: /usr/local/bin is where node and npm are installed
-    Windows: C:\Program Files\nodejs
+    Windows: Install node-v0.10.13-x64.msi
+             Files at C:\Program Files\nodejs
 
 Express:
     http://blog.modulus.io/nodejs-and-express-create-rest-api
@@ -39,7 +41,7 @@ MongoDB:
         sudo brew upgrade mongodb
     Windows:
         mongodb.org
-        download and unzip the zip file
+        download and unzip mongodb-win32-x86_64-2.4.5.zip to c:\mongodb
 
 MongoDB client for node.js:
     Specify via package.json, install using "npm install"
