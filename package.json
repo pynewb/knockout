@@ -1,6 +1,6 @@
 {
-  "name": "show-rest-api",
-  "description": "a rest api for shows",
+  "name": "people-rest-api",
+  "description": "a rest api for people",
   "version": "0.0.1",
   "dependencies": {
     "express": "3.x",
