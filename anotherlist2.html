@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Knockout List Using Bootstrap Grid Layout</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+        <script type='text/javascript' src='knockout-2.3.0.js'></script>
+    </head>
+    <body>
+        <h4>Shows to Watch</h4>
+        <div class="row">
+            <div class="span6">Show</div>
+            <div class="span4">Source</div>
+            <div class="span2">&nbsp;</div>
+        </div>
+
+        <!--  ko foreach: shows -->
+        <div class="row">
+            <div class="span6"><span data-bind="text: name"></span></div>
+            <div class="span4"><span data-bind="text: source"></span></div>
+            <div class="span2"><a href="#" class="btn btn-danger" data-bind="click: $parent.removeShow">Remove</a></div>
+        </div>
+        <!-- /ko -->
+        
+        <!-- ko with: newShow -->
+        <div class="row">
+            <div class="span6"><input type="text" placeholder="name" data-bind="value: name"></input></div>
+            <div class="span4"><input type="text" placeholder="source" data-bind="value: source"></input></div>
+            <div class="span2"><button class="btn btn-primary" data-bind="click: $parent.addShow">Add</button></div>
+        </div>
+        <!-- /ko -->
+
+        <script type="text/javascript">
+            function Show(name, source) {
+                this.name = name;
+                this.source = source;
+            }
+
+            function AppModel() {
+                var self = this;
+                
+                self.shows = [
+                    new Show('Life', 'Netflix'),
+                    new Show('Arrested Development', 'Netflix'),
+                    new Show('Suits', 'Xfinity')
+                ];
+            }
+
+            function ObservableShow(name, source) {
+                this.name = ko.observable(name);
+                this.source = ko.observable(source);
+                this.clear = function() {
+                    this.name("");
+                    this.source("");
+                }
+            }
+
+            function AppViewModel(appModel) {
+                var self = this;
+             
+                self.appModel = appModel;
+                
+                self.shows = ko.observableArray();
+                
+                self.setShows = function() {
+                    self.appModel.shows.forEach(function (show) {
+                        self.shows.push(new ObservableShow(show.name, show.source));
+                    });
+                };
+
+                self.setShows();
+
+                self.addShow = function() {
+                    self.shows.push(new ObservableShow(self.newShow.name(), self.newShow.source()));
+                    self.clearNewShow();
+                };
+             
+                self.removeShow = function() {
+                    self.shows.remove(this);
+                };
+                
+                self.newShow = new ObservableShow("", "");
+                
+                self.clearNewShow = function() {
+                    self.newShow.clear();
+                };
+            }
+
+            var appModel = new AppModel();
+            var appViewModel = new AppViewModel(appModel);
+            ko.applyBindings(appViewModel);
+        </script>
+    </body>
+</html>

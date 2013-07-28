@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Knockout List Using Bootstrap CSS</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+        <script type='text/javascript' src='knockout-2.3.0.js'></script>
+    </head>
+    <body>
+        <script src="jquery-1.10.2.min.js"></script>
+        <script src="bootstrap/js/bootstrap.min.js"></script>
+        
+        <h4>Shows to Watch</h4>
+        <table class="table table-striped table-condensed">
+            <thead>
+                <tr>
+                    <th>Show</th>
+                    <th>Source</th>
+                    <th>&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!--  ko foreach: shows -->
+                <tr>
+                    <td><span data-bind="text: name"></span></td>
+                    <td><span data-bind="text: source"></span></td>
+                    <td><a href="#" class="btn btn-danger" data-bind="click: $parent.removeShow">Remove</a></td>
+                </tr>
+                <!-- /ko -->
+                
+                <!-- ko with: newShow -->
+                <tr>
+                    <td><input type="text" placeholder="name" data-bind="value: name"></input></td>
+                    <td><input type="text" placeholder="source" data-bind="value: source"></input></td>
+                    <td><button class="btn btn-primary" data-bind="click: $parent.addShow">Add</button></td>
+                </tr>
+                <!-- /ko -->
+            </tbody>
+        </table>
+        
+        <script type="text/javascript">
+            function Show(name, source) {
+                this.name = name;
+                this.source = source;
+            }
+
+            function AppModel() {
+                var self = this;
+                
+                self.shows = [
+                    new Show('Life', 'Netflix'),
+                    new Show('Arrested Development', 'Netflix'),
+                    new Show('Suits', 'Xfinity')
+                ];
+            }
+
+            function ObservableShow(name, source) {
+                this.name = ko.observable(name);
+                this.source = ko.observable(source);
+                this.clear = function() {
+                    this.name("");
+                    this.source("");
+                }
+            }
+
+            function AppViewModel(appModel) {
+                var self = this;
+             
+                self.appModel = appModel;
+                
+                self.shows = ko.observableArray();
+                
+                self.setShows = function() {
+                    self.appModel.shows.forEach(function (show) {
+                        self.shows.push(new ObservableShow(show.name, show.source));
+                    });
+                };
+
+                self.setShows();
+
+                self.addShow = function() {
+                    self.shows.push(new ObservableShow(self.newShow.name(), self.newShow.source()));
+                    self.clearNewShow();
+                };
+             
+                self.removeShow = function() {
+                    self.shows.remove(this);
+                };
+                
+                self.newShow = new ObservableShow("", "");
+                
+                self.clearNewShow = function() {
+                    self.newShow.clear();
+                };
+            }
+
+            var appModel = new AppModel();
+            var appViewModel = new AppViewModel(appModel);
+            ko.applyBindings(appViewModel);
+        </script>
+    </body>
+</html>
