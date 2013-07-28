@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Knockout List Example</title>
+        <title>Knockout List Example With REST Model and Twitter Bootstrap</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
         <script type='text/javascript' src='knockout-2.3.0.js'></script>
     </head>
     <body>
         <script type='text/javascript' src='jquery-1.10.2.min.js'></script>
 
         <h4>People</h4>
-        <table>
+        <table class="table table-striped table-condensed">
             <thead>
                 <tr>
                     <th>First name</th>
@@ -21,18 +23,19 @@
                 <tr>
                     <td><input type="text" data-bind="value: firstName"/></td>
                     <td><input type="text" data-bind="value: lastName"/></td>
-                    <td><button data-bind="click: $parent.removePerson">Delete</button></td>
+                    <td><button class="btn btn-danger" data-bind="click: $parent.removePerson">Delete</button></td>
                 </tr>
                 <!-- /ko -->
                 
                 <tr data-bind="with: newPerson">
                     <td><input type="text" data-bind="value: firstName"/></td>
                     <td><input type="text" data-bind="value: lastName"/></td>
-                    <td><button data-bind="click: $parent.addPerson">Add</button></td>
+                    <td><button class="btn btn-primary" data-bind="click: $parent.addPerson">Add</button></td>
                 </tr>
                 
                 <tr>
-                    <td><button data-bind="click: save">Save</button></td>
+                    <td><button class="btn btn-danger" data-bind="click: setPeople">Cancel</button>
+                        <button class="btn btn-danger" data-bind="click: save">Save</button></td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                 </tr>
@@ -40,6 +43,7 @@
         </table>
                 
         <script type='text/javascript'>
+        <!--
             function AppModel() {
                 var self = this;
                 
@@ -55,17 +59,18 @@
                         dataType: "json",
                         timeout: 30000,
                         url: "http://localhost:4730/people",
-                        error: function (fail) {
-                            alert("Failure getting people: " + fail);
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            console.log("getPeople - Status " + textStatus + " error " + errorThrown + " failure getting people");
                             if (callback) {
-                                callback(false);
+                                callback(false, {status: textStatus, error: errorThrown});
                             }
                         },
-                        success: function (data) {
-                            alert("Got: " + JSON.stringify(data));
+                        success: function (data, textStatus) {
+                            // TODO: check for REST/CRUD error
+                            console.log("getPeople - Status " + textStatus + " getting " + JSON.stringify(data));
                             self.people = data;
                             if (callback) {
-                                callback(true);
+                                callback(true, {status: textStatus});
                             }
                         }
                     });
@@ -78,15 +83,62 @@
                         timeout: 30000,
                         url: "http://localhost:4730/people/" + person._id,
                         error: function (jqXHR, textStatus, errorThrown) {
-                            alert("Status " + textStatus + " error " + errorThrown + " failure deleting person: " + JSON.stringify(person));
+                            console.log("deletePerson - Status " + textStatus + " error " + errorThrown + " failure deleting person: " + JSON.stringify(person));
                             if (callback) {
-                                callback(false);
+                                callback(false, {status: textStatus, error: errorThrown});
                             }
                         },
                         success: function (data, textStatus) {
-                            alert("Status" + textStatus + " deleting " + JSON.stringify(data));
+                            // TODO: check for REST/CRUD error
+                            console.log("deletePerson - Status " + textStatus + " deleting " + JSON.stringify(data));
                             if (callback) {
-                                callback(true);
+                                callback(true, {status: textStatus});
+                            }
+                        }
+                    });
+                };
+
+                self.insertPerson = function (person, callback) {
+                    $.ajax({ 
+                        type: "POST",
+                        dataType: "json",
+                        data: person,
+                        timeout: 30000,
+                        url: "http://localhost:4730/people",
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            console.log("insertPerson - Status " + textStatus + " error " + errorThrown + " failure inserting person " + JSON.stringify(person));
+                            if (callback) {
+                                callback(false, {status: textStatus, error: errorThrown});
+                            }
+                        },
+                        success: function (data, textStatus) {
+                            // TODO: check for REST/CRUD error
+                            console.log("insertPerson - Status " + textStatus + " inserting " + JSON.stringify(data));
+                            if (callback) {
+                                callback(true, {status: textStatus}, data._id);
+                            }
+                        }
+                    });
+                };
+
+                self.updatePerson = function (person, callback) {
+                    $.ajax({ 
+                        type: "PUT",
+                        dataType: "json",
+                        data: person,
+                        timeout: 30000,
+                        url: "http://localhost:4730/people/" + person._id,
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            console.log("updatePerson - Status " + textStatus + " error " + errorThrown + " failure updating person " + JSON.stringify(person));
+                            if (callback) {
+                                callback(false, {status: textStatus, error: errorThrown});
+                            }
+                        },
+                        success: function (data, textStatus) {
+                            // TODO: check for REST/CRUD error
+                            console.log("updatePerson - Status " + textStatus + " updating " + JSON.stringify(data));
+                            if (callback) {
+                                callback(true, {status: textStatus});
                             }
                         }
                     });
@@ -97,7 +149,7 @@
                     var updates = [];
                     var deletes = [];
                     people.forEach(function (person) {
-                        if (person._id == null) {
+                        if (!person._id) {
                             inserts.push(person);
                         } else {
                             var matches = self.people.filter(function (obj) {
@@ -115,7 +167,7 @@
                     });
                     self.people.forEach(function (person) {
                         var matches = people.filter(function (obj) {
-                            return obj._id == person._id;
+                            return obj._id && obj._id == person._id;
                         });
                         if (matches.length > 1) {
                             alert('fubar: ' + matches.length + ' match(es) found for existing ' + JSON.stringify(person));
@@ -127,9 +179,24 @@
                     });
                     alert("All> " + JSON.stringify(people) + "\n" + "Inserts> " + JSON.stringify(inserts) + "\n" + "Updates> " + JSON.stringify(updates) + "\n" + "Deletes> " + JSON.stringify(deletes));
                     
+                    // TODO: handle errors...how?
+                    // N.B. two kinds of errors (1) the AJAX call fails (2) the CRUD action fails
+                    inserts.forEach(function (person) {
+                        self.insertPerson(person, function (success, status, id) {
+                            console.log("Success " + success + " status " + JSON.stringify(status) + " inserting person " + JSON.stringify(person) + " " + id);
+                            person._id = id;
+                        });
+                    });
+                    
+                    updates.forEach(function (person) {
+                        self.updatePerson(person, function (success, status) {
+                            console.log("Success " + success + " status " + JSON.stringify(status) + " updating person " + JSON.stringify(person));
+                        });
+                    });
+                    
                     deletes.forEach(function (person) {
-                        self.deletePerson(person, function (success) {
-                            alert("Success " + success + " deleting person " + JSON.stringify(person));
+                        self.deletePerson(person, function (success, status) {
+                            console.log("Success " + success + " status " + JSON.stringify(status) + " deleting person " + JSON.stringify(person));
                         });
                     });
                     
@@ -145,13 +212,12 @@
                 self.people = ko.observableArray();
              
                 self.setPeople = function() {
+                    self.people.removeAll();
                     self.appModel.people.forEach(function (person) {
                         self.people.push({ _id: person._id, firstName: ko.observable(person.firstName), lastName: ko.observable(person.lastName) });
                     });
                 };
                 
-                self.setPeople();
-            
                 self.newPerson = {
                     firstName: ko.observable(""),
                     lastName: ko.observable(""),
@@ -162,7 +228,7 @@
                 };
                 
                 self.addPerson = function() {
-                    self.people.push({ _id: null, firstName: ko.observable(self.newPerson.firstName()), lastName: ko.observable(self.newPerson.lastName()) });
+                    self.people.push({ firstName: ko.observable(self.newPerson.firstName()), lastName: ko.observable(self.newPerson.lastName()) });
                     self.newPerson.reset();
                 };
              
@@ -180,13 +246,15 @@
             }
              
             var appModel = new AppModel();
-            appModel.getPeople(function (success) {
-                alert("Success " + success + " " + JSON.stringify(appModel.people));
+            appModel.getPeople(function (success, status) {
+                console.log("Success " + success + " status " + JSON.stringify(status) + " getting people " + JSON.stringify(appModel.people));
     
                 var appViewModel = new AppViewModel(appModel);
+                appViewModel.setPeople();
+            
                 ko.applyBindings(appViewModel);
             });
-                        
+        -->
         </script>
     </body>
 </html>

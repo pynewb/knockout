@@ -29,7 +29,8 @@ node.js:
              Files at C:\Program Files\nodejs
 
 Express:
-    http://blog.modulus.io/nodejs-and-express-create-rest-api
+    tutorials at http://blog.modulus.io/nodejs-and-express-create-rest-api
+                 http://coenraets.org/blog/2012/10/creating-a-rest-api-using-node-js-express-and-mongodb/
     Specify via package.json, install using "npm install"
 
 MongoDB:

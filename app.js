@@ -1,5 +1,6 @@
 var express = require('express');
 var mongo = require('mongodb');
+var BSON = mongo.BSONPure;
 
 var app = express();
 app.use(express.logger());
@@ -23,16 +24,82 @@ mongoClient.open(function(err, mongoClient) {
   }
 });
 
-app.get('/people', function(req, res) {
-  //res.type('text/plain'); // set content-type
-  //res.send('i am a beautiful butterfly'); // send text response
-    
+app.get('/people', function (req, res) {
   console.log("get /people");
     
+  appDb.collection('people', function (err, collection) {
+    collection.find().toArray(function (err, people) {
+      if (err) {
+        res.send({'error': 'An error has occurred - ' + err});
+      } else {
+        console.log('got people ' + JSON.stringify(people));        
+        res.jsonp(people);  // N.B. support JSONP
+      }
+    });
+  });
+});
+
+app.get('/people/:id', function (req, res) {
+  console.log("get /people/" + req.params.id);
+    
+  appDb.collection('people', function (err, collection) {
+    collection.findOne({'_id': new BSON.ObjectID(req.params.id)}, function (err, person) {
+      if (err) {
+        res.send({'error': 'An error has occurred - ' + err});
+      } else {
+        console.log('got person ' + JSON.stringify(person));
+        res.jsonp(person);  // N.B. support JSONP
+      }
+    });
+  });
+});
+
+app.delete('/people/:id', function (req, res) {
+  console.log("delete /people/" + req.params.id);
+    
   appDb.collection('people', function(err, collection) {
-    collection.find().toArray(function(err, people) {
-      console.log("return " + JSON.stringify(people));        
-      res.jsonp(people);
+    collection.remove({'_id': new BSON.ObjectID(req.params.id)}, {safe: true}, function (err, result) {
+      if (err) {
+        res.send({'error': 'An error has occurred - ' + err});
+      } else {
+        console.log('' + result + ' document(s) deleted');
+        res.send(req.body);
+      }
+    });
+  });
+});
+
+app.post('/people', function (req, res) {
+  // N.B. the caller can include _id
+  console.log("post /people " + JSON.stringify(req.body));
+
+  appDb.collection('people', function (err, collection) {
+    collection.insert(req.body, {safe: true}, function (err, result) {
+      if (err) {
+        res.send({'error': 'An error has occurred - ' + err});
+      } else {
+        console.log('Success: ' + JSON.stringify(result[0]));
+        res.send(result[0]);
+      }
+    });
+  });
+});
+
+app.put('/people/:id', function (req, res) {
+  var personWithoutId = JSON.parse(JSON.stringify(req.body));
+  if (personWithoutId._id) {
+    delete(personWithoutId._id);
+  }
+  console.log("put /people/" + req.params.id + " " + JSON.stringify(personWithoutId));
+    
+  appDb.collection('people', function(err, collection) {
+    collection.update({'_id': new BSON.ObjectID(req.params.id)}, personWithoutId, {safe: true}, function (err, result) {
+      if (err) {
+        res.send({'error': 'An error has occurred - ' + err});
+      } else {
+        console.log('' + result + ' document(s) updated');
+        res.send(req.body);
+      }
     });
   });
 });
@@ -40,7 +107,7 @@ app.get('/people', function(req, res) {
 /*--------------------------------------------------------------------------------------------------------------------*/
 // Populate database with sample data -- Only used once: the first time the application is started.
 // You'd typically not find this code in a real-life app, since the database would already exist.
-var populateDB = function() {
+var populateDB = function () {
  
   var people = [
     { firstName: 'Bert', lastName: 'Bertington' },
