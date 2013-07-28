@@ -52,7 +52,7 @@
                 self.getPeople = function (callback) {
                     $.ajax({ 
                         type: "GET",
-                        dataType: "jsonp",
+                        dataType: "jsonp",  // N.B. this html can be loaded directly into browser as a file
                         timeout: 30000,
                         url: "http://localhost:4730/people",
                         error: function (fail) {
