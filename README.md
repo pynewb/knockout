@@ -56,3 +56,6 @@ MongoDB client for node.js:
         
         This gives many warnings, but no errors
 
+To run, point browser at
+
+    http://localhost:4730/list6.html
