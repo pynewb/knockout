@@ -4,6 +4,7 @@
         <title>Knockout List Example With REST Model and Twitter Bootstrap</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+        <link href="list.css" rel="stylesheet" media="screen">
         <script type='text/javascript' src='knockout-2.3.0.js'></script>
     </head>
     <body>
@@ -21,15 +22,15 @@
             <tbody>
                 <!-- ko foreach: people -->
                 <tr>
-                    <td><input type="text" data-bind="value: firstName"/></td>
-                    <td><input type="text" data-bind="value: lastName"/></td>
+                    <td><input type="text" class="flushbottom" data-bind="value: firstName"/></td>
+                    <td><input type="text" class="flushbottom" data-bind="value: lastName"/></td>
                     <td><button class="btn btn-danger" data-bind="click: $parent.removePerson">Delete</button></td>
                 </tr>
                 <!-- /ko -->
                 
                 <tr data-bind="with: newPerson">
-                    <td><input type="text" data-bind="value: firstName"/></td>
-                    <td><input type="text" data-bind="value: lastName"/></td>
+                    <td><input type="text" class="flushbottom" data-bind="value: firstName"/></td>
+                    <td><input type="text" class="flushbottom" data-bind="value: lastName"/></td>
                     <td><button class="btn btn-primary" data-bind="click: $parent.addPerson">Add</button></td>
                 </tr>
                 
@@ -144,19 +145,24 @@
                     });
                 };
 
-                self.setPeople = function(people) {
+                self.setPeople = function (peopleWithArg, insertCallback) {
+                    var people = [];
                     var inserts = [];
                     var updates = [];
                     var deletes = [];
-                    people.forEach(function (person) {
+                    
+                    peopleWithArg.forEach(function (personWithArg) {
+                        var person = personWithArg.person;
+                        people.push(person);
+                        
                         if (!person._id) {
-                            inserts.push(person);
+                            inserts.push(personWithArg);
                         } else {
                             var matches = self.people.filter(function (obj) {
                                 return obj._id == person._id;
                             });
                             if (matches.length != 1) {
-                                alert('fubar: ' + matches.length + ' match(es) found for ' + JSON.stringify(person));
+                                alert('fubar: ' + matches.length + ' match(es) found for ' + JSON.stringify(person) + ' in ' + JSON.stringify(self.people));
                                 return;
                             }
                             var match = matches[0];
@@ -165,26 +171,32 @@
                             }
                         }
                     });
+                    
                     self.people.forEach(function (person) {
                         var matches = people.filter(function (obj) {
                             return obj._id && obj._id == person._id;
                         });
                         if (matches.length > 1) {
-                            alert('fubar: ' + matches.length + ' match(es) found for existing ' + JSON.stringify(person));
+                            alert('fubar: ' + matches.length + ' match(es) found for existing ' + JSON.stringify(person) + ' in ' + JSON.stringify(people));
                             return;
                         }
                         if (matches.length == 0) {
                             deletes.push(person);
                         }
                     });
+
                     alert("All> " + JSON.stringify(people) + "\n" + "Inserts> " + JSON.stringify(inserts) + "\n" + "Updates> " + JSON.stringify(updates) + "\n" + "Deletes> " + JSON.stringify(deletes));
                     
                     // TODO: handle errors...how?
                     // N.B. two kinds of errors (1) the AJAX call fails (2) the CRUD action fails
-                    inserts.forEach(function (person) {
+                    inserts.forEach(function (personWithArg, index) {
+                        var person = personWithArg.person;
                         self.insertPerson(person, function (success, status, id) {
                             console.log("Success " + success + " status " + JSON.stringify(status) + " inserting person " + JSON.stringify(person) + " " + id);
                             person._id = id;
+                            if (insertCallback) {
+                                insertCallback(id, personWithArg.insertCallbackArg);
+                            }
                         });
                     });
                     
@@ -239,9 +251,16 @@
                 self.save = function() {
                     var people = [];
                     self.people().forEach(function (person) {
-                        people.push({ _id: person._id, firstName: person.firstName() , lastName: person.lastName() });
+                        people.push({ person: { _id: person._id, firstName: person.firstName() , lastName: person.lastName() }, insertCallbackArg: person} );
                     });
-                    self.appModel.setPeople(people);
+                    self.appModel.setPeople(people, function (id, person) {
+                        if (person._id) {
+                            alert('fubar - person ' + JSON.stringify(person) + ' already has an _id so do not assign ' + id);
+                        } else {
+                            console.log('Assign _id ' + id + ' to person ' + JSON.stringify(person));
+                            person._id = id;
+                        }
+                    });
                 };
             }
              
