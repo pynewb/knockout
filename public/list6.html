@@ -103,7 +103,8 @@
                     $.ajax({ 
                         type: "POST",
                         dataType: "json",
-                        data: person,
+                        contentType: "application/json",
+                        data: JSON.stringify(person),
                         timeout: 30000,
                         url: "http://localhost:4730/people",
                         error: function (jqXHR, textStatus, errorThrown) {
@@ -126,7 +127,8 @@
                     $.ajax({ 
                         type: "PUT",
                         dataType: "json",
-                        data: person,
+                        contentType: "application/json",
+                        data: JSON.stringify(person),
                         timeout: 30000,
                         url: "http://localhost:4730/people/" + person._id,
                         error: function (jqXHR, textStatus, errorThrown) {
